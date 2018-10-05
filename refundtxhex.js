@@ -49,6 +49,7 @@ var refundAddr = args.options.callbackaddr;
 var redeemScriptHex = args.options.redeemscripthex;
 
 //
+// [main code]
 // create refund hex tx
 //
 const bobKeyPair = bitcoin.ECPair.fromPrivateKey(Buffer.from(bobPrivKeyHex, "hex"), testnet);
@@ -97,21 +98,13 @@ console.log(tx.toHex());
 //                  index,
 //              }
 function txOutpointsToSwapAddr(swapAddr){
-    var url = util.format("https://testnet.blockchain.info/rawaddr/%s", swapAddr)
-    var txs = JSON.parse(httpGet(url)).txs;
+    var url = util.format("https://api.blockcypher.com/v1/btc/test3/addrs/%s", swapAddr)
+    var addrInfo= JSON.parse(httpGet(url));
+    var totalValue = addrInfo.balance;
 
     var outpoints = [];
-    var totalValue = 0;
-    for (var tx of txs) {
-        var outputs = tx.out;
-        for (var output of outputs) {
-            if (!output.addr) { continue; };
-
-            if (output.addr == swapAddr) {
-                outpoints.push({txid: tx.hash, index: output.n});
-                totalValue += output.value;
-            };
-        };
+    for (var tx of addrInfo.txrefs) {
+        outpoints.push({txid: tx.tx_hash, index: tx.tx_output_n});
     };
 
     return [outpoints, totalValue];
